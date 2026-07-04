@@ -23,19 +23,17 @@
         :class="['message-row',msg.role]"
       >
 
-        <div class="avatar">
-          {{ msg.role === "user" ? "👤" : "🤖" }}
-        </div>
+         <div class="avatar">
+    🤖
+   </div>
 
         <div class="bubble">
 
-          <div class="text">
-            {{ msg.text }}
-          </div>
+         <div class="thinking">
 
-          <div class="time">
-            {{ msg.time }}
-          </div>
+      <span></span>
+      <span></span>
+      <span></span>
 
         </div>
 
@@ -60,7 +58,7 @@
       </button>
 
     </div>
-
+</div>
   </div>
 </template>
 
@@ -71,7 +69,8 @@ export default {
     return {
       input: "",
       loading: false,
-      messages: []
+      messages: [],
+      typingSpeed: 18
     }
   },
 
@@ -96,12 +95,6 @@ export default {
 
       this.loading = true;
 
-      this.messages.push({
-        role: "ai",
-        text: "💭 در حال فکر کردن...",
-        time: ""
-      });
-
       this.$nextTick(() => {
         this.$refs.chatBox.scrollTop =
           this.$refs.chatBox.scrollHeight;
@@ -124,15 +117,7 @@ export default {
 
         const data = await res.json();
 
-        this.messages[this.messages.length - 1] = {
-          role: "ai",
-          text: data.answer,
-          time: new Date().toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit"
-          })
-        };
-
+     await this.typeMessage(data.answer);
       } catch (e) {
 
         this.messages[this.messages.length - 1] = {
@@ -152,7 +137,40 @@ export default {
 
       }
 
-    }
+    },
+    async typeMessage(text) {
+
+  const index = this.messages.length;
+
+  this.messages.push({
+    role: "ai",
+    text: "",
+    time: ""
+  });
+
+  for (let i = 0; i < text.length; i++) {
+
+    this.messages[index].text += text[i];
+
+    await new Promise(resolve =>
+      setTimeout(resolve, this.typingSpeed)
+    );
+
+    this.$nextTick(() => {
+      this.$refs.chatBox.scrollTop =
+        this.$refs.chatBox.scrollHeight;
+    });
+
+  }
+
+  this.messages[index].time =
+    new Date().toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit"
+    });
+
+}
+
 
   }
 
@@ -425,4 +443,63 @@ button:disabled{
     }
 
 }
+.thinking{
+
+    width:70px;
+    height:44px;
+
+    background:#1e293b;
+
+    border-radius:18px;
+
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    gap:6px;
+
+}
+
+.thinking span{
+
+    width:8px;
+    height:8px;
+
+    border-radius:50%;
+
+    background:white;
+
+    animation:bounce 1.2s infinite;
+
+}
+
+.thinking span:nth-child(2){
+
+    animation-delay:.2s;
+
+}
+
+.thinking span:nth-child(3){
+
+    animation-delay:.4s;
+
+}
+
+@keyframes bounce{
+
+    0%,80%,100%{
+
+        transform:scale(.5);
+        opacity:.4;
+
+    }
+
+    40%{
+
+        transform:scale(1);
+        opacity:1;
+
+    }
+
+}
+
 </style>
